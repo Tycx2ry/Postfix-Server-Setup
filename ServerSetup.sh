@@ -56,7 +56,7 @@ ubuntu_initialize() {
 
 
 install_ssl_Cert() {
-	git clone https://github.com/certbot/certbot.git /opt/letsencrypt > #/dev/null 2>&1
+	git clone https://github.com/certbot/certbot.git /opt/letsencrypt #> /dev/null 2>&1
 
 	cd /opt/letsencrypt
 	letsencryptdomains=()
