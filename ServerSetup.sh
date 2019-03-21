@@ -8,17 +8,35 @@ fi
 ### Functions ###
 
 ubuntu_initialize() {
+	# Ensure Python reads/writes files in UTF-8. If the machine
+	# triggers some other locale in Python, like ASCII encoding,
+	# Python may not be able to read/write files. This is also
+	# in the management daemon startup script and the cron script.
+
+	if ! locale -a | grep en_US.utf8 > /dev/null; then
+    	# Generate locale if not exists
+    	hide_output locale-gen en_US.UTF-8
+	fi
+
+	export LANGUAGE=en_US.UTF-8
+	export LC_ALL=en_US.UTF-8
+	export LANG=en_US.UTF-8
+	export LC_TYPE=en_US.UTF-8
+
+	# Fix so line drawing characters are shown correctly in Putty on Windows. See #744.
+	export NCURSES_NO_UTF8_ACS=1
+
 	echo "Updating and Installing Dependicies"
-	apt-get -qq update > /dev/null 2>&1
-	apt-get -qq -y upgrade > /dev/null 2>&1
-	apt-get install -qq -y nmap > /dev/null 2>&1
-	apt-get install -qq -y git > /dev/null 2>&1
-	rm -r /var/log/exim4/ > /dev/null 2>&1
+	apt-get -qq update #> /dev/null 2>&1
+	#apt-get -qq -y upgrade > /dev/null 2>&1
+	#apt-get install -qq -y nmap > /dev/null 2>&1
+	apt-get install -qq -y git #> /dev/null 2>&1
+	rm -r /var/log/exim4/ #> /dev/null 2>&1
 
-	update-rc.d nfs-common disable > /dev/null 2>&1
-	update-rc.d rpcbind disable > /dev/null 2>&1
+	update-rc.d nfs-common disable #> /dev/null 2>&1
+	update-rc.d rpcbind disable #> /dev/null 2>&1
 
-	sysctl -p > /dev/null 2>&1
+	sysctl -p #> /dev/null 2>&1
 
 	echo "Changing Hostname"
 
@@ -38,7 +56,7 @@ ubuntu_initialize() {
 
 
 install_ssl_Cert() {
-	git clone https://github.com/certbot/certbot.git /opt/letsencrypt > /dev/null 2>&1
+	git clone https://github.com/certbot/certbot.git /opt/letsencrypt > #/dev/null 2>&1
 
 	cd /opt/letsencrypt
 	letsencryptdomains=()
@@ -336,47 +354,6 @@ function get_dns_entries(){
 	fi
 }
 
-function Install_GoPhish {
-	apt-get install unzip > /dev/null 2>&1
-	wget https://github.com/gophish/gophish/releases/download/v0.4.0/gophish-v0.4-linux-64bit.zip
-	unzip gophish-v0.4-linux-64bit.zip
-	cd gophish-v0.4-linux-64bit
-        sed -i 's/"listen_url" : "127.0.0.1:3333"/"listen_url" : "0.0.0.0:3333"/g' config.json
-	read -r -p "Do you want to add an SSL certificate to your GoPhish? [y/N] " response
-	case "$response" in
-	[yY][eE][sS]|[yY])
-        	 read -p "Enter your web server's domain: " -r primary_domain
-		 if [ -f "/etc/letsencrypt/live/${primary_domain}/fullchain.pem" ];then
-		 	ssl_cert="/etc/letsencrypt/live/${primary_domain}/fullchain.pem"
-       		 	ssl_key="/etc/letsencrypt/live/${primary_domain}/privkey.pem"
-       		 	cp $ssl_cert ${primary_domain}.crt
-        	 	cp $ssl_key ${primary_domain}.key
-        	 	sed -i "s/0.0.0.0:80/0.0.0.0:443/g" config.json
-        	 	sed -i "s/gophish_admin.crt/${primary_domain}.crt/g" config.json
-        	 	sed -i "s/gophish_admin.key/${primary_domain}.key/g" config.json
-			sed -i 's/"use_tls" : false/"use_tls" : true/g' config.json
-        	 	sed -i "s/example.crt/${primary_domain}.crt/g" config.json
-        	 	sed -i "s/example.key/${primary_domain}.key/g" config.json
-		 else
-			echo "Certificate not found, use Install SSL option first"
-		 fi
-       		 ;;
-    	*)
-        	echo "GoPhish installed"
-        	;;
-	esac
-}
-
-
-function Install_IRedMail {
-	echo "Downloading iRedMail"
-	wget https://bitbucket.org/zhb/iredmail/downloads/iRedMail-0.9.6.tar.bz2
-	tar -xvf iRedMail-0.9.6.tar.bz2
-	cd iRedMail-0.9.6/
-	chmod +x iRedMail.sh
-	echo "Running iRedMail Installer"
-	./iRedMail.sh
-}
 
 PS3="Server Setup Script - Pick an option: "
 options=("Ubuntu Prep" "Install SSL" "Install Mail Server" "Add Aliases" "Get DNS Entries")
