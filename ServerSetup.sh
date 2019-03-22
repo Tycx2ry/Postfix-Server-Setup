@@ -13,9 +13,9 @@ ubuntu_initialize() {
 	# Python may not be able to read/write files. This is also
 	# in the management daemon startup script and the cron script.
 
-	if ! locale -a | grep en_US.utf8 > /dev/null; then
+	if ! locale -a | grep en_US.utf8; then
     	# Generate locale if not exists
-    	hide_output locale-gen en_US.UTF-8
+    	locale-gen en_US.UTF-8
 	fi
 
 	export LANGUAGE=en_US.UTF-8
@@ -27,14 +27,14 @@ ubuntu_initialize() {
 	export NCURSES_NO_UTF8_ACS=1
 
 	echo "Updating and Installing Dependicies"
-	apt-get -qq update #> /dev/null 2>&1
+	apt-get update #> /dev/null 2>&1
 	#apt-get -qq -y upgrade > /dev/null 2>&1
 	#apt-get install -qq -y nmap > /dev/null 2>&1
-	apt-get install -qq -y git #> /dev/null 2>&1
-	rm -r /var/log/exim4/ #> /dev/null 2>&1
+	apt-get install git #> /dev/null 2>&1
+	#rm -r /var/log/exim4/ #> /dev/null 2>&1
 
-	update-rc.d nfs-common disable #> /dev/null 2>&1
-	update-rc.d rpcbind disable #> /dev/null 2>&1
+	#update-rc.d nfs-common disable #> /dev/null 2>&1
+	#update-rc.d rpcbind disable #> /dev/null 2>&1
 
 	sysctl -p #> /dev/null 2>&1
 
@@ -274,8 +274,8 @@ function add_alias(){
 }
 
 function get_dns_entries(){
-	#extip=$(ifconfig|grep 'Link encap\|inet '|awk '!/Loopback|127./'|tr -s ' '|grep 'inet'|tr ':' ' '|cut -d" " -f3)
-	extip="{your internet ipv4}"
+	extip=$(ifconfig|grep 'Link encap\|inet '|awk '!/Loopback|127./'|tr -s ' '|grep 'inet'|tr ':' ' '|cut -d" " -f3)
+	#extip="{your internet ipv4}"
 	domain=$(ls /etc/opendkim/keys/ | head -1)
 	fields=$(echo "${domain}" | tr '.' '\n' | wc -l)
 	dkimrecord=$(cut -d '"' -f 2 "/etc/opendkim/keys/${domain}/mail.txt" | tr -d "[:space:]")
@@ -377,4 +377,3 @@ select opt in "${options[@]}" "Quit"; do
     esac
 
 done
-
